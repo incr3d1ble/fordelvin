@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <title>Selamat Ulang Tahun, Delvin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:    #0d0d0d;
+      --bg2:   #111111;
+      --bg3:   #161616;
+      --ink:   #f0ece6;
+      --mid:   #ccc0b0;
+      --muted: #a09080;
+      --line:  rgba(232,226,217,0.15);
+      --gold:  #c8a96e;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'Jost', sans-serif;
+      font-weight: 300;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ── topbar ── */
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: max(1rem, env(safe-area-inset-top)) 2rem 1rem;
+      background: rgba(10,10,10,0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .topbar-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.9rem; font-weight: 400;
+      letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--mid);
+    }
+
+    .music-ctrl { display: flex; align-items: center; gap: 0.9rem; }
+
+    .music-info {
+      font-size: 0.68rem; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--muted);
+    }
+
+    .play-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 1px solid rgba(232,226,217,0.3);
+      background: transparent; color: var(--ink);
+      font-size: 0.6rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color 0.2s, color 0.2s;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      flex-shrink: 0;
+    }
+    .play-btn:hover, .play-btn:active { border-color: var(--gold); color: var(--gold); }
+
+    /* ── hero ── */
+    .hero {
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 9rem 2rem 6rem;
+      position: relative;
+      overflow: hidden;
+      background: #0d0d0d;
+    }
+
+    /* video bg — sits behind everything */
+    .vbg {
+      position: absolute;
+      inset: -80px;          /* overshoot edges so no black bars */
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .vbg iframe, .vbg video {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: max(100%, 177.78vh);
+      height: max(100%, 56.25vw);
+      transform: translate(-50%, -50%);
+      border: 0;
+      pointer-events: none;
+      object-fit: cover;
+    }
+
+    /* heavy overlay — kills all YouTube chrome/text bleed-through */
+    .voverlay {
+      position: absolute;
+      inset: 0; z-index: 1;
+      background:
+        linear-gradient(to bottom,
+          rgba(0,0,0,0.65) 0%,
+          rgba(0,0,0,0.45) 50%,
+          rgba(0,0,0,0.70) 100%);
+    }
+
+    /* hero text stack */
+    .hero-inner {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    .hero::after {
+      content: ''; position: absolute;
+      bottom: 0; left: 8%; right: 8%;
+      height: 1px; background: var(--line); z-index: 3;
+    }
+
+    .photo-frame {
+      width: 160px; height: 160px;
+      border-radius: 50%; overflow: hidden;
+      margin: 0 auto 3rem;
+      box-shadow: 0 0 0 1px rgba(232,226,217,0.18), 0 20px 60px rgba(0,0,0,0.7);
+      opacity: 0; animation: up 1s ease 0.2s forwards;
+    }
+    .photo-frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-frame .fallback {
+      width: 100%; height: 100%;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(255,255,255,0.05);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem; letter-spacing: 0.3em;
+      color: var(--muted); text-transform: uppercase;
+    }
+
+    .eyebrow {
+      font-size: 0.65rem; letter-spacing: 0.38em;
+      text-transform: uppercase; color: rgba(200,169,110,0.9);
+      margin-bottom: 1.2rem;
+      opacity: 0; animation: up 1s ease 0.4s forwards;
+    }
+
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(5rem, 15vw, 11rem);
+      font-weight: 300; line-height: 0.88;
+      letter-spacing: -0.01em; color: #fff;
+      text-shadow: 0 4px 40px rgba(0,0,0,0.5);
+      opacity: 0; animation: up 1s ease 0.55s forwards;
+    }
+
+    .hero-sub {
+      margin-top: 2rem; font-size: 0.92rem;
+      color: rgba(240,236,230,0.78); font-weight: 300;
+      max-width: 320px; line-height: 1.9;
+      opacity: 0; animation: up 1s ease 0.7s forwards;
+    }
+
+    .rule {
+      width: 32px; height: 1px; background: var(--gold);
+      margin: 2rem auto 0;
+      opacity: 0; animation: up 1s ease 0.85s forwards;
+    }
+
+    /* ── sections ── */
+    section { padding: 6rem 1.5rem; }
+    .wrap   { max-width: 720px; margin: 0 auto; }
+    .wrap-w { max-width: 960px; margin: 0 auto; }
+
+    .label {
+      font-size: 0.65rem; letter-spacing: 0.34em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: 1.2rem;
+    }
+
+    .sh {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.9rem, 5vw, 3rem);
+      font-weight: 300; line-height: 1.2;
+      margin-bottom: 3.5rem; color: var(--ink);
+    }
+    .sh em { font-style: italic; color: var(--gold); }
+
+    /* quotes */
+    .sec-quotes { background: var(--bg2); }
+    .q-list { border-top: 1px solid var(--line); }
+
+    .q-item {
+      padding: 2.2rem 0; border-bottom: 1px solid var(--line);
+      display: grid; grid-template-columns: 2rem 1fr;
+      gap: 1.4rem; align-items: start;
+    }
+
+    .q-n {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.82rem; font-style: italic;
+      color: var(--muted); padding-top: 0.3rem;
+    }
+
+    .q-t {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+      font-weight: 300; line-height: 1.8;
+      color: var(--ink); font-style: italic;
+    }
+
+    .q-src {
+      margin-top: 0.65rem; font-size: 0.65rem;
+      letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--gold); font-family: 'Jost', sans-serif; font-style: normal;
+    }
+
+    /* harapan */
+    .sec-harapan { background: var(--bg); }
+
+    .h-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1px; background: var(--line); border: 1px solid var(--line);
+    }
+
+    .h-card { background: var(--bg); padding: 2.2rem 1.8rem; transition: background 0.22s; }
+    .h-card:hover { background: var(--bg3); }
+
+    .h-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem; font-weight: 400;
+      margin-bottom: 0.75rem; color: var(--ink); line-height: 1.6;
+    }
+    .h-card p { font-size: 0.82rem; line-height: 1.6; color: var(--mid); }
+
+    /* letter */
+    .sec-letter { background: var(--bg2); text-align: center; }
+
+    .letter {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.05rem, 2.3vw, 1.4rem);
+      font-weight: 300; line-height: 2;
+      color: var(--ink); max-width: 560px; margin: 0 auto;
+    }
+    .letter strong { font-weight: 600; font-style: italic; }
+
+    .letter-sign {
+      margin-top: 3rem; font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem; font-style: italic; color: var(--mid);
+    }
+
+    /* footer */
+    footer {
+      padding: 4rem 1.5rem; text-align: center;
+      border-top: 1px solid var(--line);
+      padding-bottom: max(4rem, calc(2rem + env(safe-area-inset-bottom)));
+    }
+
+    .f-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-weight: 300; color: var(--ink); letter-spacing: 0.04em;
+    }
+    .f-sub {
+      margin-top: 0.6rem; font-size: 0.65rem;
+      letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted);
+    }
+
+    /* reveal */
+    .r { opacity: 0; transform: translateY(22px); transition: opacity 0.75s ease, transform 0.75s ease; }
+    .r.on { opacity: 1; transform: none; }
+
+    @keyframes up {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    /* tap hint */
+    .tap-hint {
+      display: none;
+      position: fixed; inset: 0; z-index: 300;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      opacity: 0; transition: opacity 0.4s ease;
+      cursor: pointer;
+    }
+    .tap-hint-box {
+      text-align: center;
+      border: 1px solid rgba(200,169,110,0.35);
+      padding: 2.5rem 3rem; border-radius: 2px;
+    }
+    .tap-hint-text {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem; font-weight: 300; font-style: italic;
+      color: var(--ink); letter-spacing: 0.05em;
+    }
+    .tap-hint-sub {
+      margin-top: 0.6rem; font-size: 0.65rem;
+      letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold);
+    }
+
+    @media (max-width: 600px) {
+      .topbar { padding: max(0.9rem, env(safe-area-inset-top)) 1.2rem 0.9rem; }
+      .music-info { display: none; }
+      .q-item { grid-template-columns: 1.5rem 1fr; gap: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Tap to start overlay (mobile autoplay fallback) -->
+<div class="tap-hint" id="tapHint" onclick="unlockAudio()">
+  <div class="tap-hint-box">
+    <p class="tap-hint-text">Ketuk untuk memulai</p>
+    <p class="tap-hint-sub">Tulus — Monokrom</p>
+  </div>
+</div>
+
+<!-- Local music -->
+<audio id="audio" loop preload="auto">
+  <source src="music/monokrom.mp3" type="audio/mpeg"/>
+</audio>
+
+<!-- Topbar -->
+<header class="topbar">
+  <span class="topbar-title">Selamat Ulang Tahun</span>
+  <div class="music-ctrl">
+    <span class="music-info">Tulus — Monokrom</span>
+    <button class="play-btn" id="playBtn" onclick="toggleMusic()" title="Play / Pause">
+      <span id="playIcon">▶</span>
+    </button>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+
+  <!-- Local video background -->
+  <div class="vbg" id="videoBg">
+    <video
+      id="bgvid"
+      src="video/mono.mp4"
+      autoplay muted loop playsinline
+      preload="auto"
+      aria-hidden="true">
+    </video>
+  </div>
+
+  <!-- Dark overlay — hides any YouTube chrome that bleeds through -->
+  <div class="voverlay"></div>
+
+  <!-- Content -->
+  <div class="hero-inner">
+    <div class="photo-frame">
+      <img src="images/ultah.png" alt="Delvin"
+        onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"/>
+      <div class="fallback">Delvin</div>
+    </div>
+    <p class="eyebrow">Hari yang istimewa</p>
+    <h1>Delvin</h1>
+    <p class="hero-sub">Semoga hari ini jadi salah satu yang paling kamu ingat.</p>
+    <div class="rule"></div>
+  </div>
+</section>
+
+<!-- Quotes -->
+<section class="sec-quotes">
+  <div class="wrap">
+    <p class="label r">Kata-kata dari orang bijak</p>
+    <h2 class="sh r">Kutipan untuk menemani<br><em>perjalananmu</em></h2>
+    <div class="q-list">
+      <div class="q-item r">
+        <span class="q-n">01</span>
+        <div>
+          <p class="q-t">"Jadilah perubahan yang ingin kamu lihat di dunia ini."</p>
+          <p class="q-src">Mahatma Gandhi</p>
+        </div>
+      </div>
+      <div class="q-item r">
+        <span class="q-n">02</span>
+        <div>
+          <p class="q-t">"Pikiran adalah segalanya. Kamu menjadi apa yang kamu pikirkan."</p>
+          <p class="q-src">Buddha</p>
+        </div>
+      </div>
+      <div class="q-item r">
+        <span class="q-n">03</span>
+        <div>
+          <p class="q-t">"Hidup yang tidak direnungkan tidak layak untuk dijalani."</p>
+          <p class="q-src">Socrates</p>
+        </div>
+      </div>
+      <div class="q-item r">
+        <span class="q-n">04</span>
+        <div>
+          <p class="q-t">"Kamu tidak dapat mengubah angin, tapi kamu bisa mengatur layarmu untuk selalu sampai ke tujuan."</p>
+          <p class="q-src">Jimmy Dean</p>
+        </div>
+      </div>
+      <div class="q-item r">
+        <span class="q-n">05</span>
+        <div>
+          <p class="q-t">"Di tengah setiap kesulitan, tersimpan sebuah kesempatan."</p>
+          <p class="q-src">Albert Einstein</p>
+        </div>
+      </div>
+      <div class="q-item r">
+        <span class="q-n">06</span>
+        <div>
+          <p class="q-t">"Waktu terbaik untuk menanam pohon adalah dua puluh tahun lalu. Waktu terbaik kedua adalah sekarang."</p>
+          <p class="q-src">Pepatah Tiongkok</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Harapan -->
+<section class="sec-harapan">
+  <div class="wrap-w">
+    <p class="label r">Harapan untukmu</p>
+    <h2 class="sh r">Kata-kata yang semoga<br>selalu kamu <em>ingat</em></h2>
+    <div class="h-grid">
+      <div class="h-card r">
+        <h3>"Lakukan hari ini apa yang orang lain tidak mau lakukan, agar esok kamu bisa hidup seperti yang orang lain tidak bisa."</h3>
+        <p>— Jerry Rice</p>
+      </div>
+      <div class="h-card r">
+        <h3>"Kebahagiaan bukan sesuatu yang sudah jadi. Ia datang dari tindakanmu sendiri."</h3>
+        <p>— Dalai Lama</p>
+      </div>
+      <div class="h-card r">
+        <h3>"Jangan hitung hari-harimu. Buat setiap harinya terhitung."</h3>
+        <p>— Muhammad Ali</p>
+      </div>
+      <div class="h-card r">
+        <h3>"Orang yang bergerak maju dengan bahagia akan menemukan bahwa kesuksesan menyambut mereka."</h3>
+        <p>— Ralph Waldo Emerson</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Letter -->
+<section class="sec-letter">
+  <div class="wrap">
+    <p class="label r">Ucapan</p>
+    <div class="letter r">
+      <p>Selamat ulang tahun, <strong>Delvin</strong>.</p>
+      <br>
+      <p>Semoga di tahun ini kamu makin dekat dengan versi terbaik dirimu. Bukan berarti harus sempurna, tapi cukup untuk terus bergerak, terus belajar, dan tidak menyerah pada hal-hal yang benar-benar penting bagimu.</p>
+      <br>
+      <p>Semoga kesehatan selalu menyertaimu, rezeki datang dari arah yang tidak kamu sangka, dan orang-orang di sekitarmu tahu betapa berharganya kamu bagi mereka.</p>
+      <br>
+      <p>Selamat merayakan hari ini. Kamu layak mendapatkan semua kebaikan yang sedang dalam perjalanan menuju hidupmu.</p>
+    </div>
+    <p class="letter-sign r">Salam hangat, Kevin</p>
+  </div>
+</section>
+
+<footer>
+  <p class="f-name r">Delvin</p>
+  <p class="f-sub r">Wishing you all the best :]</p>
+</footer>
+
+<script>
+  // ── Scroll reveal ──
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('on'); obs.unobserve(e.target); }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.r').forEach((el, i) => {
+    el.style.transitionDelay = (i % 4) * 0.07 + 's';
+    obs.observe(el);
+  });
+
+  // ── Music ──
+  const audio    = document.getElementById('audio');
+  const icon     = document.getElementById('playIcon');
+  const tapHint  = document.getElementById('tapHint');
+  let playing    = false;
+
+  audio.volume = 0.7;
+
+  function hideTapHint() {
+    if (tapHint) {
+      tapHint.style.opacity = '0';
+      setTimeout(() => { tapHint.style.display = 'none'; }, 500);
+    }
+  }
+
+  function startAudio() {
+    return audio.play().then(() => {
+      playing = true;
+      icon.textContent = '■';
+      hideTapHint();
+    });
+  }
+
+  function unlockAudio() {
+    startAudio().catch(() => {});
+  }
+
+  function showTapHint() {
+    if (tapHint) {
+      tapHint.style.display = 'flex';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => { tapHint.style.opacity = '1'; });
+      });
+    }
+  }
+
+  // Attempt autoplay on load
+  window.addEventListener('load', () => {
+    startAudio().catch(() => {
+      // Browser blocked autoplay — show tap hint
+      showTapHint();
+    });
+  });
+
+  // Also catch any first-interaction to unlock
+  function firstInteraction() {
+    if (!playing) startAudio().catch(() => {});
+    document.removeEventListener('touchstart', firstInteraction);
+    document.removeEventListener('keydown',    firstInteraction);
+  }
+  document.addEventListener('touchstart', firstInteraction, { passive: true });
+  document.addEventListener('keydown',    firstInteraction);
+
+  function toggleMusic() {
+    if (playing) {
+      audio.pause();
+      icon.textContent = '▶';
+      playing = false;
+    } else {
+      startAudio().catch(() => {});
+    }
+  }
+
+  // ── Ensure bg video plays (needed on some browsers) ──
+  const bgvid = document.getElementById('bgvid');
+  if (bgvid) bgvid.play().catch(() => {});
+</script>
+</body>
+</html>
